@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>beMatrix SEG Template Builder</title>
+    <title>beMatrix Template Builder</title>
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
@@ -11,18 +11,39 @@
       <section class="hero card">
         <div>
           <p class="eyebrow">ROARK • Local tool</p>
-          <h1>beMatrix SEG Template Builder</h1>
+          <h1>beMatrix Template Builder</h1>
           <p class="lede">
-            Build Illustrator-friendly SEG template artboards from real width and height segments. This version outputs a single-artboard SVG with 0.125&quot; bleed all around.
+            Build Illustrator-friendly SEG or hard-panel templates from real width and height segments. Enter your segments in millimeters or inches, then export Illustrator-ready SVG artwork with inch-based template sizing.
           </p>
         </div>
         <form id="template-form" class="controls">
+          <label>
+            Template type
+            <select id="template-type">
+              <option value="seg" selected>SEG (single artboard)</option>
+              <option value="hard">Hard Panels (individual pieces)</option>
+            </select>
+          </label>
+          <label>
+            Input unit
+            <select id="input-unit">
+              <option value="mm" selected>Millimeters (mm)</option>
+              <option value="in">Inches (in)</option>
+            </select>
+          </label>
+          <label>
+            Output unit
+            <select id="output-unit">
+              <option value="in" selected>Inches (in)</option>
+              <option value="mm">Millimeters (mm)</option>
+            </select>
+          </label>
           <label class="span-2">
-            Width segments (mm)
+            Width segments
             <input id="width-segments" type="text" value="62, 496, 62, 1984, 62" required />
           </label>
           <label class="span-2">
-            Height segments (mm)
+            Height segments
             <input id="height-segments" type="text" value="62, 992, 62" required />
           </label>
           <label>
@@ -30,18 +51,13 @@
             <input id="bleed" type="number" min="0" step="0.001" value="0.125" required />
           </label>
           <label>
-            Output mode
-            <select id="template-type">
-              <option value="seg" selected>SEG (single artboard)</option>
-            </select>
-          </label>
-          <label class="span-2">
             Job name
             <input id="job-name" type="text" placeholder="Optional job name" />
           </label>
           <div class="action-row span-2">
             <button type="submit">Build template</button>
             <button type="button" id="download-svg" class="button-secondary">Download SVG</button>
+            <button type="button" id="download-illustrator" class="button-secondary">Download Illustrator Script</button>
           </div>
         </form>
       </section>
@@ -52,7 +68,7 @@
         <article class="card board-card">
           <div class="section-head">
             <h2>Template preview</h2>
-            <p>Single SEG artboard with trim, bleed, segment guides, and labels.</p>
+            <p id="preview-subtitle">Preview updates based on SEG vs hard-panel output.</p>
           </div>
           <div id="preview-wrap" class="preview-wrap"></div>
         </article>
@@ -60,15 +76,14 @@
         <aside class="card summary-card">
           <div class="section-head">
             <h2>Template summary</h2>
-            <p>Use these dimensions when saving your Illustrator file.</p>
+            <p>Primary export sizing is shown in inches, with source values preserved for cross-checking.</p>
           </div>
           <div id="summary" class="summary"></div>
           <article class="spec-card card-lite">
             <h3>Output notes</h3>
-            <ul>
+            <ul id="output-notes">
               <li>Color mode target: <strong>CMYK</strong></li>
               <li>Bleed applied on all four sides</li>
-              <li>SEG output uses one artboard sized to final graphic + bleed</li>
               <li>SVG opens in Illustrator for save-as <code>.ai</code></li>
             </ul>
           </article>
