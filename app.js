@@ -313,7 +313,6 @@ function buildSvg(plan) {
 function buildIllustratorScript(plan) {
   const title = plan.jobName || 'beMatrix Template';
   const gapIn = 0;
-  const maxRowWidthIn = 220;
 
   const pieces = plan.templateType === 'hard'
     ? plan.heightSegmentsMm.flatMap((heightMm, rowIndex) => plan.widthSegmentsMm.map((widthMm, colIndex) => ({
@@ -347,7 +346,6 @@ function buildIllustratorScript(plan) {
     title,
     bleedIn: plan.bleed,
     gapIn,
-    maxRowWidthIn,
     templateType: plan.templateType,
     outputUnit: plan.outputUnit,
     pieces,
@@ -377,7 +375,6 @@ function buildIllustratorScript(plan) {
   var artboards = doc.artboards;
   var gapPt = toPt(payload.gapIn);
   var bleedPt = toPt(payload.bleedIn);
-  var maxRowWidthPt = toPt(payload.maxRowWidthIn);
   var strokeTrim = makeCmyk(75, 68, 67, 90);
   var strokeBleed = makeCmyk(0, 82, 93, 0);
   var textColor = makeCmyk(73, 55, 48, 18);
@@ -389,12 +386,6 @@ function buildIllustratorScript(plan) {
     var piece = payload.pieces[i];
     var artW = toPt(piece.artboardWidthIn);
     var artH = toPt(piece.artboardHeightIn);
-    if (currentX > 0 && currentX + artW > maxRowWidthPt) {
-      currentX = 0;
-      currentY -= (rowMaxHeight + gapPt);
-      rowMaxHeight = 0;
-    }
-
     var rect = [currentX, currentY, currentX + artW, currentY - artH];
     if (i === 0) artboards[0].artboardRect = rect; else artboards.add(rect);
     artboards[i].name = piece.label;
