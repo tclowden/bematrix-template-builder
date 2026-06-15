@@ -312,7 +312,7 @@ function buildSvg(plan) {
 
 function buildIllustratorScript(plan) {
   const title = plan.jobName || 'beMatrix Template';
-  const gapIn = 0.25;
+  const gapIn = 0;
   const maxRowWidthIn = 220;
 
   const pieces = plan.templateType === 'hard'
