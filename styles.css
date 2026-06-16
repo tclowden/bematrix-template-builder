@@ -135,7 +135,9 @@ button {
   padding: 18px;
 }
 .preview-stage {
-  min-width: max-content;
+  min-width: 0;
+  display: flex;
+  justify-content: center;
 }
 .summary {
   display: grid;
@@ -175,7 +177,8 @@ button {
 }
 svg.template-preview {
   display: block;
-  width: min(100%, 1100px);
+  width: min(100%, 760px);
+  max-width: 760px;
   height: auto;
   margin: 0 auto;
   background: white;
