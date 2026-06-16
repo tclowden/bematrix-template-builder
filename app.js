@@ -341,60 +341,18 @@ function buildSegSvg(plan) {
   const trimYPx = inchesToPx(plan.trimYIn);
   const finishedWidthPx = inchesToPx(plan.finishedWidthIn);
   const finishedHeightPx = inchesToPx(plan.finishedHeightIn);
-
-  const verticals = plan.widthBreaksMm.slice(0, -1).map((mm) => {
-    const x = trimXPx + mmToPx(mm);
-    return `<line x1="${x}" y1="${trimYPx}" x2="${x}" y2="${trimYPx + finishedHeightPx}" stroke="#94a3b8" stroke-width="1" />`;
-  }).join('');
-
-  const horizontals = plan.heightBreaksMm.slice(0, -1).map((mm) => {
-    const y = trimYPx + mmToPx(mm);
-    return `<line x1="${trimXPx}" y1="${y}" x2="${trimXPx + finishedWidthPx}" y2="${y}" stroke="#94a3b8" stroke-width="1" />`;
-  }).join('');
-
-  const widthLabels = [];
-  let runningXmm = 0;
-  plan.widthSegmentsMm.forEach((segment, index) => {
-    const start = trimXPx + mmToPx(runningXmm);
-    const mid = start + (mmToPx(segment) / 2);
-    widthLabels.push(`<text x="${mid}" y="${trimYPx - 14}" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#475569">W${index + 1}: ${plan.outputUnit === 'mm' ? formatMm(segment, 1) : formatInches(mmToInches(segment), 2)}</text>`);
-    runningXmm += segment;
-  });
-
-  const heightLabels = [];
-  let runningYmm = 0;
-  plan.heightSegmentsMm.forEach((segment, index) => {
-    const start = trimYPx + mmToPx(runningYmm);
-    const mid = start + (mmToPx(segment) / 2);
-    heightLabels.push(`<text x="${trimXPx - 10}" y="${mid}" text-anchor="end" dominant-baseline="middle" font-family="Arial, sans-serif" font-size="14" fill="#475569">H${index + 1}: ${plan.outputUnit === 'mm' ? formatMm(segment, 1) : formatInches(mmToInches(segment), 2)}</text>`);
-    runningYmm += segment;
-  });
-
-  const cellLabels = [];
-  let yStartMm = 0;
-  plan.heightSegmentsMm.forEach((hSeg, rowIndex) => {
-    let xStartMm = 0;
-    plan.widthSegmentsMm.forEach((wSeg, colIndex) => {
-      const x = trimXPx + mmToPx(xStartMm) + (mmToPx(wSeg) / 2);
-      const y = trimYPx + mmToPx(yStartMm) + (mmToPx(hSeg) / 2);
-      cellLabels.push(`<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="middle" font-family="Arial, sans-serif" font-size="20" fill="#64748b">R${rowIndex + 1} / C${colIndex + 1}</text>`);
-      xStartMm += wSeg;
-    });
-    yStartMm += hSeg;
-  });
-
+  const totalWidthLabel = `Overall width: ${formatOutput(plan.finishedWidthIn, plan.finishedWidthMm, plan.outputUnit)}`;
+  const totalHeightLabel = `Overall height: ${formatOutput(plan.finishedHeightIn, plan.finishedHeightMm, plan.outputUnit)}`;
   const title = plan.jobName ? `${escapeXml(plan.jobName)} • ` : '';
+
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="${plan.artboardWidthIn}in" height="${plan.artboardHeightIn}in" viewBox="0 0 ${widthPx} ${heightPx}">
   <title>${title}beMatrix SEG Template</title>
   <rect x="0" y="0" width="${widthPx}" height="${heightPx}" fill="#ffffff" />
   <rect x="0.5" y="0.5" width="${widthPx - 1}" height="${heightPx - 1}" fill="none" stroke="#f84209" stroke-width="2" stroke-dasharray="14 10" />
   <rect x="${trimXPx}" y="${trimYPx}" width="${finishedWidthPx}" height="${finishedHeightPx}" fill="none" stroke="#020c14" stroke-width="3" />
-  <g>${verticals}</g>
-  <g>${horizontals}</g>
-  <g>${widthLabels.join('')}</g>
-  <g>${heightLabels.join('')}</g>
-  <g>${cellLabels.join('')}</g>
+  <text x="${trimXPx + (finishedWidthPx / 2)}" y="${trimYPx - 14}" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#475569">${totalWidthLabel}</text>
+  <text x="${trimXPx - 10}" y="${trimYPx + (finishedHeightPx / 2)}" text-anchor="end" dominant-baseline="middle" font-family="Arial, sans-serif" font-size="16" fill="#475569">${totalHeightLabel}</text>
   <text x="36" y="44" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#020c14">${title}beMatrix SEG Template</text>
   <text x="36" y="76" font-family="Arial, sans-serif" font-size="18" fill="#63666a">Finished size: ${formatOutput(plan.finishedWidthIn, plan.finishedWidthMm, plan.outputUnit)} × ${formatOutput(plan.finishedHeightIn, plan.finishedHeightMm, plan.outputUnit)} • Artboard: ${formatOutput(plan.artboardWidthIn, inchesToMm(plan.artboardWidthIn), plan.outputUnit)} × ${formatOutput(plan.artboardHeightIn, inchesToMm(plan.artboardHeightIn), plan.outputUnit)} • Bleed: ${plan.outputUnit === 'mm' ? formatMm(inchesToMm(plan.bleed), 1) : formatInches(plan.bleed, 2)}</text>
   <text x="36" y="104" font-family="Arial, sans-serif" font-size="16" fill="#63666a">Input ${plan.inputUnit.toUpperCase()} • output ${plan.outputUnit.toUpperCase()} • CMYK target</text>
