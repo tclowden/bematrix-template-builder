@@ -607,8 +607,9 @@ function buildCurrentPlan() {
   renderNotes(plan);
   currentSvgMarkup = buildSvg(plan);
   currentIllustratorScript = buildIllustratorScript(plan);
-  currentFilename = `${plan.jobName ? slugify(plan.jobName) + '-' : ''}bematrix-${plan.templateType}-template.svg`;
-  currentIllustratorFilename = `${plan.jobName ? slugify(plan.jobName) + '-' : ''}bematrix-${plan.templateType}-template.jsx`;
+  const baseName = plan.jobName ? slugify(plan.jobName) : `bematrix-${plan.templateType}-template`;
+  currentFilename = `${baseName}.svg`;
+  currentIllustratorFilename = `${baseName}.jsx`;
   renderPreview(currentSvgMarkup, plan);
 }
 
