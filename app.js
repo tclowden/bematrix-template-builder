@@ -526,7 +526,7 @@ function buildIllustratorScript(plan) {
     trimRect.strokeColor = strokeTrim;
 
     var headerLeft = left + 12;
-    var headerTop = topOrigin - toPt(1);
+    var headerTop = topOrigin - toPt(1.35);
     var headerMaxWidth = Math.max(90, artW - 24);
     var titleText = payload.title + (payload.pieces.length > 1 ? ' • ' + piece.label : '');
     var instructionText = payload.instructionLine;
@@ -541,21 +541,7 @@ function buildIllustratorScript(plan) {
   }
 
   app.activeDocument = doc;
-  var saveTarget = File.saveDialog('Save Illustrator template as', '*.ai');
-  if (saveTarget) {
-    if (!/\.ai$/i.test(saveTarget.name)) {
-      saveTarget = new File(saveTarget.fsName + '.ai');
-    }
-    var saveOptions = new IllustratorSaveOptions();
-    saveOptions.pdfCompatible = true;
-    saveOptions.embedICCProfile = true;
-    saveOptions.compressed = true;
-    saveOptions.compatibility = Compatibility.ILLUSTRATOR17;
-    doc.saveAs(saveTarget, saveOptions);
-    alert('Illustrator template created and saved as ' + saveTarget.name + '.');
-  } else {
-    alert('Illustrator template created with ' + payload.pieces.length + ' artboard(s). Save cancelled.');
-  }
+  alert('Illustrator template created with ' + payload.pieces.length + ' artboard(s). Use File > Save As to save your .ai file.');
 })();
 `;
 }
