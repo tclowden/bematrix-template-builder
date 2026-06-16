@@ -526,7 +526,7 @@ function buildIllustratorScript(plan) {
     trimRect.strokeColor = strokeTrim;
 
     var headerLeft = left + 12;
-    var headerTop = topOrigin - 18;
+    var headerTop = topOrigin - toPt(1);
     var headerMaxWidth = Math.max(90, artW - 24);
     var titleText = payload.title + (payload.pieces.length > 1 ? ' • ' + piece.label : '');
     var instructionText = payload.instructionLine;
