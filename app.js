@@ -436,7 +436,7 @@ function buildIllustratorScript(plan) {
     })))
     : [{
       leftIn: 0,
-      topIn: 0,
+      topIn: plan.artboardHeightIn,
       label: 'SEG Master',
       trimWidthIn: plan.finishedWidthIn,
       trimHeightIn: plan.finishedHeightIn,
@@ -454,11 +454,16 @@ function buildIllustratorScript(plan) {
     ? `(piece.trimWidthMm + payload.bleedIn * 2 * 25.4).toFixed(1).replace(/\\.0$/, '') + ' mm × ' + (piece.trimHeightMm + payload.bleedIn * 2 * 25.4).toFixed(1).replace(/\\.0$/, '') + ' mm'`
     : `piece.artboardWidthIn.toFixed(2) + ' in × ' + piece.artboardHeightIn.toFixed(2) + ' in'`;
 
+  const canvasWidthIn = pieces.reduce((max, piece) => Math.max(max, piece.leftIn + piece.artboardWidthIn), 0);
+  const canvasHeightIn = pieces.reduce((max, piece) => Math.max(max, piece.topIn), 0);
+
   const payload = {
     title,
     suggestedFileName: `${plan.jobName ? slugify(plan.jobName) : `bematrix-${plan.templateType}-template`}.ai`,
     bleedIn: plan.bleed,
     gapIn,
+    canvasWidthIn,
+    canvasHeightIn,
     pieces,
   };
 
@@ -478,7 +483,7 @@ function buildIllustratorScript(plan) {
     return frame;
   }
   var first = payload.pieces[0];
-  var doc = app.documents.add(DocumentColorSpace.CMYK, toPt(first.artboardWidthIn), toPt(first.artboardHeightIn));
+  var doc = app.documents.add(DocumentColorSpace.CMYK, toPt(payload.canvasWidthIn), toPt(payload.canvasHeightIn));
   doc.rulerUnits = RulerUnits.Inches;
   var layer = doc.layers[0];
   layer.name = payload.title;
