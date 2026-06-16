@@ -459,6 +459,7 @@ function buildIllustratorScript(plan) {
 
   const payload = {
     title,
+    instructionLine: 'Keep all graphics inside the black line. Extend bleed to the red dotted line.',
     suggestedFileName: `${plan.jobName ? slugify(plan.jobName) : `bematrix-${plan.templateType}-template`}.ai`,
     bleedIn: plan.bleed,
     gapIn,
@@ -481,6 +482,10 @@ function buildIllustratorScript(plan) {
     tr.size = size;
     tr.fillColor = color;
     return frame;
+  }
+  function fitFontSize(textValue, maxWidthPt, desiredPt, minPt) {
+    var estimated = textValue.length ? (maxWidthPt / (textValue.length * 0.55)) : desiredPt;
+    return Math.max(minPt, Math.min(desiredPt, estimated));
   }
   var first = payload.pieces[0];
   var doc = app.documents.add(DocumentColorSpace.CMYK, toPt(payload.canvasWidthIn), toPt(payload.canvasHeightIn));
@@ -520,9 +525,19 @@ function buildIllustratorScript(plan) {
     trimRect.strokeWidth = 1.5;
     trimRect.strokeColor = strokeTrim;
 
-    addLabel(layer, piece.label, left + 10, topOrigin - 18, 12, textColor);
-    addLabel(layer, 'Trim: ' + (${trimFormatExpr}), left + 10, topOrigin - 34, 10, textColor);
-    addLabel(layer, 'Artboard: ' + (${artFormatExpr}), left + 10, topOrigin - 48, 10, textColor);
+    var headerLeft = left + 12;
+    var headerTop = topOrigin - 18;
+    var headerMaxWidth = Math.max(90, artW - 24);
+    var titleText = payload.title + (payload.pieces.length > 1 ? ' • ' + piece.label : '');
+    var instructionText = payload.instructionLine;
+    var finishedText = 'Finished size: ' + (${trimFormatExpr});
+    var titleSize = fitFontSize(titleText, headerMaxWidth, 144, 18);
+    var instructionSize = fitFontSize(instructionText, headerMaxWidth, 72, 10);
+    var finishedSize = fitFontSize(finishedText, headerMaxWidth, 84, 12);
+
+    addLabel(layer, titleText, headerLeft, headerTop, titleSize, textColor);
+    addLabel(layer, instructionText, headerLeft, headerTop - titleSize - 8, instructionSize, textColor);
+    addLabel(layer, finishedText, headerLeft, headerTop - titleSize - instructionSize - 18, finishedSize, textColor);
   }
 
   app.activeDocument = doc;
