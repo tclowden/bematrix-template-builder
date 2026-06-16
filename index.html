@@ -13,7 +13,7 @@
           <p class="eyebrow">ROARK • Local tool</p>
           <h1>beMatrix Template Builder</h1>
           <p class="lede">
-            Build Illustrator-friendly SEG or hard-panel templates from real width and height segments. Enter your segments in millimeters or inches, then export Illustrator-ready SVG artwork with inch-based template sizing.
+            Build Illustrator-friendly SEG or hard-panel templates using standard beMatrix sizes. Add width and height sections from dropdowns, then export SVG or an Illustrator script.
           </p>
         </div>
         <form id="template-form" class="controls">
@@ -38,22 +38,37 @@
               <option value="mm">Millimeters (mm)</option>
             </select>
           </label>
-          <label class="span-2">
-            Width segments
-            <input id="width-segments" type="text" value="62, 496, 62, 1984, 62" required />
-          </label>
-          <label class="span-2">
-            Height segments
-            <input id="height-segments" type="text" value="62, 992, 62" required />
-          </label>
           <label>
             Bleed (in)
             <input id="bleed" type="number" min="0" step="0.001" value="0.125" required />
           </label>
-          <label>
+          <label class="span-2">
             Job name
             <input id="job-name" type="text" placeholder="Optional job name" />
           </label>
+
+          <section class="segment-group span-2">
+            <div class="segment-group-head">
+              <div>
+                <strong>Width sections</strong>
+                <p>Build the total width from standard beMatrix sizes.</p>
+              </div>
+              <button type="button" id="add-width" class="small-button">+ Add width</button>
+            </div>
+            <div id="width-rows" class="segment-rows"></div>
+          </section>
+
+          <section class="segment-group span-2">
+            <div class="segment-group-head">
+              <div>
+                <strong>Height sections</strong>
+                <p>Build the total height from standard beMatrix sizes.</p>
+              </div>
+              <button type="button" id="add-height" class="small-button">+ Add height</button>
+            </div>
+            <div id="height-rows" class="segment-rows"></div>
+          </section>
+
           <div class="action-row span-2">
             <button type="submit">Build template</button>
             <button type="button" id="download-svg" class="button-secondary">Download SVG</button>
@@ -96,6 +111,13 @@
         <div class="label"></div>
         <div class="value"></div>
         <div class="note"></div>
+      </div>
+    </template>
+
+    <template id="segment-row-template">
+      <div class="segment-row card-lite">
+        <select class="segment-select"></select>
+        <button type="button" class="small-button remove-button">Remove</button>
       </div>
     </template>
 

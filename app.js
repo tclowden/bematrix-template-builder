@@ -7,38 +7,22 @@ const outputNotesEl = document.getElementById('output-notes');
 const downloadSvgBtn = document.getElementById('download-svg');
 const downloadIllustratorBtn = document.getElementById('download-illustrator');
 const statTemplate = document.getElementById('stat-template');
+const segmentRowTemplate = document.getElementById('segment-row-template');
+const widthRowsEl = document.getElementById('width-rows');
+const heightRowsEl = document.getElementById('height-rows');
+const addWidthBtn = document.getElementById('add-width');
+const addHeightBtn = document.getElementById('add-height');
 
 const INCH_TO_PX = 96;
 const POINTS_PER_INCH = 72;
 const MM_PER_INCH = 25.4;
+const HARD_PANEL_REDUCTION_MM = 7;
+const BEMATRIX_SIZES_MM = [62, 248, 434, 496, 558, 620, 992, 1984, 2419, 2976];
 
 let currentSvgMarkup = '';
 let currentIllustratorScript = '';
-let currentPlan = null;
 let currentFilename = 'bematrix-template.svg';
 let currentIllustratorFilename = 'bematrix-template.jsx';
-
-function getInputs() {
-  return {
-    templateType: document.getElementById('template-type').value,
-    inputUnit: document.getElementById('input-unit').value,
-    outputUnit: document.getElementById('output-unit').value,
-    widthSegmentsRaw: document.getElementById('width-segments').value.trim(),
-    heightSegmentsRaw: document.getElementById('height-segments').value.trim(),
-    bleed: Number(document.getElementById('bleed').value),
-    jobName: document.getElementById('job-name').value.trim(),
-  };
-}
-
-function parseSegments(raw, axisName) {
-  const pieces = raw.split(',').map((part) => part.trim()).filter(Boolean);
-  if (!pieces.length) throw new Error(`${axisName} segments are required.`);
-  const values = pieces.map((piece) => Number(piece));
-  if (values.some((value) => !Number.isFinite(value) || value <= 0)) {
-    throw new Error(`${axisName} segments must be positive numbers.`);
-  }
-  return values;
-}
 
 function mmToInches(mm) { return mm / MM_PER_INCH; }
 function inchesToMm(inches) { return inches * MM_PER_INCH; }
@@ -60,26 +44,6 @@ function formatOutput(valueInches, valueMm, unit) {
   return unit === 'mm' ? formatMm(valueMm, 1) : formatInches(valueInches, 2);
 }
 
-function formatSourceList(values, unit) {
-  return values.map((value) => `${Number(value).toFixed(unit === 'mm' ? 0 : 3).replace(/\.000$/, '').replace(/(\.\d*[1-9])0+$/, '$1')} ${unit}`).join(' • ');
-}
-
-function validate(input) {
-  const warnings = [];
-  if (!Number.isFinite(input.bleed) || input.bleed < 0) throw new Error('Bleed must be 0 or greater.');
-  return warnings;
-}
-
-function cumulative(values) {
-  const points = [];
-  let running = 0;
-  values.forEach((value) => {
-    running += value;
-    points.push(running);
-  });
-  return points;
-}
-
 function slugify(value) {
   return String(value || '')
     .toLowerCase()
@@ -96,12 +60,88 @@ function escapeXml(value) {
     .replace(/'/g, '&apos;');
 }
 
+function cumulative(values) {
+  const points = [];
+  let running = 0;
+  values.forEach((value) => {
+    running += value;
+    points.push(running);
+  });
+  return points;
+}
+
+function createSegmentRow(container, value = 992) {
+  const row = segmentRowTemplate.content.firstElementChild.cloneNode(true);
+  const select = row.querySelector('.segment-select');
+  BEMATRIX_SIZES_MM.forEach((size) => {
+    const option = document.createElement('option');
+    option.value = String(size);
+    option.textContent = `${size} mm`;
+    if (size === value) option.selected = true;
+    select.appendChild(option);
+  });
+  row.querySelector('.remove-button').addEventListener('click', () => {
+    if (container.children.length === 1) {
+      select.value = '992';
+      return;
+    }
+    row.remove();
+  });
+  container.appendChild(row);
+}
+
+function ensureStarterRows() {
+  if (!widthRowsEl.children.length) createSegmentRow(widthRowsEl, 992);
+  if (!heightRowsEl.children.length) createSegmentRow(heightRowsEl, 992);
+}
+
+function readSegmentRows(container, axisName, inputUnit) {
+  const values = Array.from(container.querySelectorAll('.segment-select')).map((select) => Number(select.value));
+  if (!values.length) throw new Error(`${axisName} sections are required.`);
+  if (values.some((value) => !Number.isFinite(value) || value <= 0)) {
+    throw new Error(`${axisName} sections must be valid sizes.`);
+  }
+  return {
+    source: inputUnit === 'mm' ? values : values.map(mmToInches),
+    mm: values,
+  };
+}
+
+function getInputs() {
+  const inputUnit = document.getElementById('input-unit').value;
+  return {
+    templateType: document.getElementById('template-type').value,
+    inputUnit,
+    outputUnit: document.getElementById('output-unit').value,
+    widthSegments: readSegmentRows(widthRowsEl, 'Width', inputUnit),
+    heightSegments: readSegmentRows(heightRowsEl, 'Height', inputUnit),
+    bleed: Number(document.getElementById('bleed').value),
+    jobName: document.getElementById('job-name').value.trim(),
+  };
+}
+
+function validate(input) {
+  const warnings = [];
+  if (!Number.isFinite(input.bleed) || input.bleed < 0) throw new Error('Bleed must be 0 or greater.');
+  return warnings;
+}
+
 function buildPlan(input) {
   const warnings = validate(input);
-  const widthSegmentsSource = parseSegments(input.widthSegmentsRaw, 'Width');
-  const heightSegmentsSource = parseSegments(input.heightSegmentsRaw, 'Height');
-  const widthSegmentsMm = widthSegmentsSource.map((value) => sourceToMm(value, input.inputUnit));
-  const heightSegmentsMm = heightSegmentsSource.map((value) => sourceToMm(value, input.inputUnit));
+  const widthSegmentsBaseMm = input.widthSegments.mm;
+  const heightSegmentsBaseMm = input.heightSegments.mm;
+  const widthSegmentsSource = input.widthSegments.source;
+  const heightSegmentsSource = input.heightSegments.source;
+  const widthSegmentsMm = input.templateType === 'hard'
+    ? widthSegmentsBaseMm.map((value) => value === 62 ? 62 : value - HARD_PANEL_REDUCTION_MM)
+    : widthSegmentsBaseMm;
+  const heightSegmentsMm = input.templateType === 'hard'
+    ? heightSegmentsBaseMm.map((value) => value === 62 ? 62 : value - HARD_PANEL_REDUCTION_MM)
+    : heightSegmentsBaseMm;
+
+  if (widthSegmentsMm.some((value) => value <= 0) || heightSegmentsMm.some((value) => value <= 0)) {
+    throw new Error('Hard panel reduction made one or more sections zero or negative.');
+  }
 
   const finishedWidthMm = widthSegmentsMm.reduce((sum, value) => sum + value, 0);
   const finishedHeightMm = heightSegmentsMm.reduce((sum, value) => sum + value, 0);
@@ -119,6 +159,8 @@ function buildPlan(input) {
     warnings,
     widthSegmentsSource,
     heightSegmentsSource,
+    widthSegmentsBaseMm,
+    heightSegmentsBaseMm,
     widthSegmentsMm,
     heightSegmentsMm,
     widthBreaksMm: cumulative(widthSegmentsMm),
@@ -137,6 +179,10 @@ function buildPlan(input) {
   };
 }
 
+function formatSourceList(values, unit) {
+  return values.map((value) => unit === 'mm' ? `${Number(value).toFixed(0)} mm` : `${Number(value).toFixed(2)} in`).join(' • ');
+}
+
 function renderWarnings(warnings) {
   warningsEl.innerHTML = '';
   warnings.forEach((warning) => {
@@ -153,10 +199,10 @@ function renderSummary(plan) {
   const typeNote = plan.templateType === 'hard' ? `${plan.totalPieces} individual panel artboards/pieces` : 'Single Illustrator artboard';
   const stats = [
     ['Template type', typeLabel, typeNote],
-    ['Input unit', plan.inputUnit.toUpperCase(), `Entered as ${plan.inputUnit}`],
+    ['Input unit', plan.inputUnit.toUpperCase(), `Selected from beMatrix size list`],
     ['Output unit', plan.outputUnit.toUpperCase(), plan.outputUnit === 'in' ? 'Displayed/exported in inches rounded to 0.01' : 'Displayed/exported in millimeters'],
-    ['Width segments', `${plan.segmentColumns} segments`, `${formatSourceList(plan.widthSegmentsSource, plan.inputUnit)} • total ${formatOutput(plan.finishedWidthIn, plan.finishedWidthMm, plan.outputUnit)}`],
-    ['Height segments', `${plan.segmentRows} segments`, `${formatSourceList(plan.heightSegmentsSource, plan.inputUnit)} • total ${formatOutput(plan.finishedHeightIn, plan.finishedHeightMm, plan.outputUnit)}`],
+    ['Width sections', `${plan.segmentColumns} sections`, plan.templateType === 'hard' ? `${plan.widthSegmentsBaseMm.map((value, i) => `${value}→${plan.widthSegmentsMm[i]} mm`).join(' • ')} • total ${formatOutput(plan.finishedWidthIn, plan.finishedWidthMm, plan.outputUnit)}` : `${formatSourceList(plan.widthSegmentsSource, plan.inputUnit)} • total ${formatOutput(plan.finishedWidthIn, plan.finishedWidthMm, plan.outputUnit)}`],
+    ['Height sections', `${plan.segmentRows} sections`, plan.templateType === 'hard' ? `${plan.heightSegmentsBaseMm.map((value, i) => `${value}→${plan.heightSegmentsMm[i]} mm`).join(' • ')} • total ${formatOutput(plan.finishedHeightIn, plan.finishedHeightMm, plan.outputUnit)}` : `${formatSourceList(plan.heightSegmentsSource, plan.inputUnit)} • total ${formatOutput(plan.finishedHeightIn, plan.finishedHeightMm, plan.outputUnit)}`],
     ['Finished size', `${formatOutput(plan.finishedWidthIn, plan.finishedWidthMm, plan.outputUnit)} × ${formatOutput(plan.finishedHeightIn, plan.finishedHeightMm, plan.outputUnit)}`, `${formatMm(plan.finishedWidthMm)} × ${formatMm(plan.finishedHeightMm)}`],
     ['Bleed', plan.outputUnit === 'mm' ? formatMm(inchesToMm(plan.bleed), 1) : formatInches(plan.bleed, 2), 'Applied top, right, bottom, and left'],
     ['Export sizing', plan.templateType === 'hard' ? `Each piece labeled in ${plan.outputUnit}` : `${formatOutput(plan.artboardWidthIn, inchesToMm(plan.artboardWidthIn), plan.outputUnit)} × ${formatOutput(plan.artboardHeightIn, inchesToMm(plan.artboardHeightIn), plan.outputUnit)}`, plan.templateType === 'hard' ? 'Illustrator script creates adjacent artboards' : 'Single artboard includes bleed on all sides'],
@@ -183,7 +229,8 @@ function renderNotes(plan) {
     notes.push('SEG output uses one artboard sized to final graphic + bleed');
     notes.push('Illustrator script creates one labeled artboard');
   } else {
-    notes.push('Hard panel SVG is a layout proof only');
+    notes.push('Hard panel sizes are reduced by 7 mm per selected width/height section for frame allowance, except 62 mm sections stay 62 mm');
+    notes.push('Hard panel SVG is a layout proof');
     notes.push('Illustrator script creates real adjacent artboards for each hard panel piece');
   }
   notes.forEach((note) => {
@@ -313,6 +360,11 @@ function buildSvg(plan) {
 function buildIllustratorScript(plan) {
   const title = plan.jobName || 'beMatrix Template';
   const gapIn = 0;
+  const hardColumnArtWidthsIn = plan.widthSegmentsMm.map((widthMm) => mmToInches(widthMm) + (plan.bleed * 2));
+  const hardRowArtHeightsIn = plan.heightSegmentsMm.map((heightMm) => mmToInches(heightMm) + (plan.bleed * 2));
+  const hardColumnLeftsIn = hardColumnArtWidthsIn.map((_, index) => hardColumnArtWidthsIn.slice(0, index).reduce((sum, value) => sum + value, 0));
+  const totalHardHeightIn = hardRowArtHeightsIn.reduce((sum, value) => sum + value, 0);
+  const hardRowTopsIn = hardRowArtHeightsIn.map((heightIn, index) => totalHardHeightIn - hardRowArtHeightsIn.slice(0, index).reduce((sum, value) => sum + value, 0));
 
   const pieces = plan.templateType === 'hard'
     ? plan.heightSegmentsMm.flatMap((heightMm, rowIndex) => plan.widthSegmentsMm.map((widthMm, colIndex) => ({
@@ -323,8 +375,12 @@ function buildIllustratorScript(plan) {
       artboardHeightIn: mmToInches(heightMm) + (plan.bleed * 2),
       trimWidthMm: widthMm,
       trimHeightMm: heightMm,
+      leftIn: hardColumnLeftsIn[colIndex],
+      topIn: hardRowTopsIn[rowIndex],
     })))
     : [{
+      leftIn: 0,
+      topIn: 0,
       label: 'SEG Master',
       trimWidthIn: plan.finishedWidthIn,
       trimHeightIn: plan.finishedHeightIn,
@@ -346,8 +402,6 @@ function buildIllustratorScript(plan) {
     title,
     bleedIn: plan.bleed,
     gapIn,
-    templateType: plan.templateType,
-    outputUnit: plan.outputUnit,
     pieces,
   };
 
@@ -369,46 +423,44 @@ function buildIllustratorScript(plan) {
   var first = payload.pieces[0];
   var doc = app.documents.add(DocumentColorSpace.CMYK, toPt(first.artboardWidthIn), toPt(first.artboardHeightIn));
   doc.rulerUnits = RulerUnits.Inches;
-  doc.documentColorSpace = DocumentColorSpace.CMYK;
   var layer = doc.layers[0];
   layer.name = payload.title;
   var artboards = doc.artboards;
-  var gapPt = toPt(payload.gapIn);
   var bleedPt = toPt(payload.bleedIn);
   var strokeTrim = makeCmyk(75, 68, 67, 90);
   var strokeBleed = makeCmyk(0, 82, 93, 0);
   var textColor = makeCmyk(73, 55, 48, 18);
-  var currentX = 0;
-  var currentY = 0;
-  var rowMaxHeight = 0;
 
   for (var i = 0; i < payload.pieces.length; i++) {
     var piece = payload.pieces[i];
     var artW = toPt(piece.artboardWidthIn);
     var artH = toPt(piece.artboardHeightIn);
-    var rect = [currentX, currentY, currentX + artW, currentY - artH];
-    if (i === 0) artboards[0].artboardRect = rect; else artboards.add(rect);
+    var left = toPt(piece.leftIn || 0);
+    var topOrigin = toPt(piece.topIn || 0);
+    var rect = [left, topOrigin, left + artW, topOrigin - artH];
+    if (i === 0) {
+      artboards[0].artboardRect = rect;
+    } else {
+      artboards.add(rect);
+    }
     artboards[i].name = piece.label;
 
-    var bleedRect = layer.pathItems.rectangle(currentY, currentX, artW, artH);
+    var bleedRect = layer.pathItems.rectangle(topOrigin, left, artW, artH);
     bleedRect.stroked = true;
     bleedRect.filled = false;
     bleedRect.strokeWidth = 1;
     bleedRect.strokeColor = strokeBleed;
     bleedRect.strokeDashes = [8, 6];
 
-    var trimRect = layer.pathItems.rectangle(currentY - bleedPt, currentX + bleedPt, toPt(piece.trimWidthIn), toPt(piece.trimHeightIn));
+    var trimRect = layer.pathItems.rectangle(topOrigin - bleedPt, left + bleedPt, toPt(piece.trimWidthIn), toPt(piece.trimHeightIn));
     trimRect.stroked = true;
     trimRect.filled = false;
     trimRect.strokeWidth = 1.5;
     trimRect.strokeColor = strokeTrim;
 
-    addLabel(layer, piece.label, currentX + 10, currentY - 18, 12, textColor);
-    addLabel(layer, 'Trim: ' + (${trimFormatExpr}), currentX + 10, currentY - 34, 10, textColor);
-    addLabel(layer, 'Artboard: ' + (${artFormatExpr}), currentX + 10, currentY - 48, 10, textColor);
-
-    currentX += artW + gapPt;
-    if (artH > rowMaxHeight) rowMaxHeight = artH;
+    addLabel(layer, piece.label, left + 10, topOrigin - 18, 12, textColor);
+    addLabel(layer, 'Trim: ' + (${trimFormatExpr}), left + 10, topOrigin - 34, 10, textColor);
+    addLabel(layer, 'Artboard: ' + (${artFormatExpr}), left + 10, topOrigin - 48, 10, textColor);
   }
 
   app.activeDocument = doc;
@@ -439,7 +491,6 @@ function downloadTextFile(filename, content, type) {
 function buildCurrentPlan() {
   const input = getInputs();
   const plan = buildPlan(input);
-  currentPlan = plan;
   renderWarnings(plan.warnings);
   renderSummary(plan);
   renderNotes(plan);
@@ -471,4 +522,8 @@ downloadIllustratorBtn.addEventListener('click', () => {
   downloadTextFile(currentIllustratorFilename, currentIllustratorScript, 'text/javascript;charset=utf-8');
 });
 
+addWidthBtn.addEventListener('click', () => createSegmentRow(widthRowsEl, 992));
+addHeightBtn.addEventListener('click', () => createSegmentRow(heightRowsEl, 992));
+
+ensureStarterRows();
 buildCurrentPlan();

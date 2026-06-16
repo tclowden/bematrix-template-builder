@@ -53,7 +53,8 @@ h1 { margin-bottom: 10px; font-size: clamp(2rem, 3vw, 3.2rem); }
   align-content: start;
   grid-template-columns: repeat(2, minmax(0,1fr));
 }
-.controls label {
+.controls label,
+.segment-group {
   display: grid;
   gap: 8px;
   font-weight: 600;
@@ -67,6 +68,34 @@ h1 { margin-bottom: 10px; font-size: clamp(2rem, 3vw, 3.2rem); }
   font-size: 1rem;
   background: white;
 }
+.segment-group {
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: #f8fafc;
+}
+.segment-group-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: start;
+}
+.segment-group-head p {
+  color: var(--muted);
+  font-weight: 400;
+  margin-bottom: 0;
+}
+.segment-rows {
+  display: grid;
+  gap: 10px;
+}
+.segment-row {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) auto;
+  gap: 10px;
+  padding: 10px;
+  align-items: center;
+}
 .action-row { display: flex; gap: 12px; flex-wrap: wrap; }
 button {
   border: none;
@@ -77,6 +106,13 @@ button {
   font-size: 1rem;
   font-weight: 800;
   cursor: pointer;
+}
+.small-button {
+  padding: 10px 14px;
+  font-size: .92rem;
+}
+.remove-button {
+  background: #e2e8f0;
 }
 .button-secondary { background: var(--dark); color: white; }
 .layout-grid {
@@ -151,4 +187,5 @@ code {
 @media (max-width: 1040px) {
   .hero, .layout-grid, .controls { grid-template-columns: 1fr; }
   .controls .span-2 { grid-column: span 1; }
+  .segment-group-head, .segment-row { grid-template-columns: 1fr; display: grid; }
 }
