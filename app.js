@@ -48,6 +48,7 @@ let currentSvgMarkup = '';
 let currentIllustratorScript = '';
 let currentFilename = 'bematrix-template.svg';
 let currentIllustratorFilename = 'bematrix-template.jsx';
+let currentPreviewPlan = null;
 
 function mmToInches(mm) { return mm / MM_PER_INCH; }
 function inchesToMm(inches) { return inches * MM_PER_INCH; }
@@ -562,11 +563,28 @@ function buildIllustratorScript(plan) {
 `;
 }
 
+function fitPreview() {
+  const svg = previewWrapEl.querySelector('svg.template-preview');
+  if (!svg) return;
+  const viewBox = (svg.getAttribute('viewBox') || '').split(/\s+/).map(Number);
+  if (viewBox.length !== 4 || viewBox.some((n) => !Number.isFinite(n))) {
+    svg.style.width = '100%';
+    return;
+  }
+  const [, , vbWidth, vbHeight] = viewBox;
+  const wrapWidth = Math.max(320, previewWrapEl.clientWidth - 36);
+  const maxHeight = currentPreviewPlan?.templateType === 'hard' ? 520 : 620;
+  const scale = Math.min(wrapWidth / vbWidth, maxHeight / vbHeight, 1);
+  svg.style.width = `${Math.max(280, vbWidth * scale)}px`;
+}
+
 function renderPreview(svgMarkup, plan) {
+  currentPreviewPlan = plan;
   previewSubtitleEl.textContent = plan.templateType === 'hard'
     ? 'Hard panel mode shows individual pieces. Use the Illustrator script for real adjacent artboards in Adobe.'
     : 'SEG mode shows one continuous artboard with segment guides and labels.';
   previewWrapEl.innerHTML = `<div class="preview-stage">${svgMarkup.replace('<svg ', '<svg class="template-preview" ')}</div>`;
+  fitPreview();
 }
 
 function downloadTextFile(filename, content, type) {
@@ -617,6 +635,7 @@ downloadIllustratorBtn.addEventListener('click', () => {
 
 addWidthBtn.addEventListener('click', () => createSegmentRow(widthRowsEl, 992));
 addHeightBtn.addEventListener('click', () => createSegmentRow(heightRowsEl, 992));
+window.addEventListener('resize', fitPreview);
 
 ensureStarterRows();
 buildCurrentPlan();
