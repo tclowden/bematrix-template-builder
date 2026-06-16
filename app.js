@@ -489,6 +489,9 @@ function buildIllustratorScript(plan) {
   }
   var first = payload.pieces[0];
   var doc = app.documents.add(DocumentColorSpace.CMYK, toPt(payload.canvasWidthIn), toPt(payload.canvasHeightIn));
+  try { app.preferences.setIntegerPreference('rulerType', 0); } catch (e) {}
+  try { app.preferences.setIntegerPreference('strokeUnits', 0); } catch (e) {}
+  try { app.preferences.setIntegerPreference('text/units', 0); } catch (e) {}
   doc.rulerUnits = RulerUnits.Inches;
   var layer = doc.layers[0];
   layer.name = payload.title;
