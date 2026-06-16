@@ -17,8 +17,31 @@ const INCH_TO_PX = 96;
 const POINTS_PER_INCH = 72;
 const MM_PER_INCH = 25.4;
 const HARD_PANEL_REDUCTION_MM = 7;
-const BEMATRIX_SIZES_MM = [62, 248, 434, 496, 558, 620, 992, 1984, 2418, 2976];
 const CUSTOM_OPTION_VALUE = '__custom__';
+const BEMATRIX_OPTIONS = [
+  { id: 'std-62', label: '62', segMm: 62, hardMm: 62 },
+  { id: 'std-248', label: '248', segMm: 248, hardMm: 248 - HARD_PANEL_REDUCTION_MM },
+  { id: 'std-434', label: '434', segMm: 434, hardMm: 434 - HARD_PANEL_REDUCTION_MM },
+  { id: 'std-496', label: '496', segMm: 496, hardMm: 496 - HARD_PANEL_REDUCTION_MM },
+  { id: 'std-558', label: '558', segMm: 558, hardMm: 558 - HARD_PANEL_REDUCTION_MM },
+  { id: 'std-620', label: '620', segMm: 620, hardMm: 620 - HARD_PANEL_REDUCTION_MM },
+  { id: 'std-992', label: '992', segMm: 992, hardMm: 992 - HARD_PANEL_REDUCTION_MM },
+  { id: 'std-1984', label: '1984', segMm: 1984, hardMm: 1984 - HARD_PANEL_REDUCTION_MM },
+  { id: 'std-2418', label: '2418', segMm: 2418, hardMm: 2418 - HARD_PANEL_REDUCTION_MM },
+  { id: 'std-2976', label: '2976', segMm: 2976, hardMm: 2976 - HARD_PANEL_REDUCTION_MM },
+  { id: 'curved-248-int', label: '248 - Curved Interior', segMm: 320, hardMm: 317 },
+  { id: 'curved-248-ext', label: '248 - Curved Exterior', segMm: 418, hardMm: 408 },
+  { id: 'curved-496-int', label: '496 - Curved Interior', segMm: 710, hardMm: 707 },
+  { id: 'curved-496-ext', label: '496 - Curved Exterior', segMm: 807, hardMm: 798 },
+  { id: 'curved-992-int-45', label: '992 - Curved Interior 45°', segMm: 730, hardMm: 725 },
+  { id: 'curved-992-ext-45', label: '992 - Curved Exterior 45°', segMm: 779, hardMm: 771 },
+  { id: 'curved-992-int-90', label: '992 - Curved Interior 90°', segMm: 1461, hardMm: 1458 },
+  { id: 'curved-992-ext-90', label: '992 - Curved Exterior 90°', segMm: 1558, hardMm: 1549 },
+  { id: 'curved-1488-int', label: '1488 - Curved Interior', segMm: 1120, hardMm: 1116 },
+  { id: 'curved-1488-ext', label: '1488 - Curved Exterior', segMm: 1168, hardMm: 1161 },
+  { id: 'curved-2976-int', label: '2976 - Curved Interior', segMm: 1144, hardMm: 1150 },
+  { id: 'curved-2976-ext', label: '2976 - Curved Exterior', segMm: 1168, hardMm: 1161 },
+];
 
 let currentSvgMarkup = '';
 let currentIllustratorScript = '';
@@ -77,26 +100,29 @@ function setCustomVisibility(select, customInput) {
   customInput.required = isCustom;
 }
 
-function createSegmentRow(container, value = 992, insertAfterRow = null) {
+function getOptionById(id) {
+  return BEMATRIX_OPTIONS.find((option) => option.id === id) || null;
+}
+
+function createSegmentRow(container, initial = { type: 'preset', optionId: 'std-992' }, insertAfterRow = null) {
   const row = segmentRowTemplate.content.firstElementChild.cloneNode(true);
   const select = row.querySelector('.segment-select');
   const customInput = row.querySelector('.segment-custom-input');
-  const hasPreset = BEMATRIX_SIZES_MM.includes(value);
 
-  BEMATRIX_SIZES_MM.forEach((size) => {
-    const option = document.createElement('option');
-    option.value = String(size);
-    option.textContent = `${size} mm`;
-    if (size === value) option.selected = true;
-    select.appendChild(option);
+  BEMATRIX_OPTIONS.forEach((option) => {
+    const item = document.createElement('option');
+    item.value = option.id;
+    item.textContent = `${option.label} (SEG ${option.segMm} / Hard ${option.hardMm})`;
+    if (initial.type === 'preset' && option.id === initial.optionId) item.selected = true;
+    select.appendChild(item);
   });
 
   const customOption = document.createElement('option');
   customOption.value = CUSTOM_OPTION_VALUE;
   customOption.textContent = 'Custom…';
-  if (!hasPreset) {
+  if (initial.type === 'custom') {
     customOption.selected = true;
-    customInput.value = String(value);
+    customInput.value = String(initial.value);
   }
   select.appendChild(customOption);
 
@@ -104,13 +130,15 @@ function createSegmentRow(container, value = 992, insertAfterRow = null) {
   setCustomVisibility(select, customInput);
 
   row.querySelector('.duplicate-button').addEventListener('click', () => {
-    const duplicateValue = select.value === CUSTOM_OPTION_VALUE ? Number(customInput.value) : Number(select.value);
-    createSegmentRow(container, duplicateValue, row);
+    const duplicateInitial = select.value === CUSTOM_OPTION_VALUE
+      ? { type: 'custom', value: Number(customInput.value) }
+      : { type: 'preset', optionId: select.value };
+    createSegmentRow(container, duplicateInitial, row);
   });
 
   row.querySelector('.remove-button').addEventListener('click', () => {
     if (container.children.length === 1) {
-      select.value = '992';
+      select.value = 'std-992';
       customInput.value = '';
       setCustomVisibility(select, customInput);
       return;
@@ -126,25 +154,39 @@ function createSegmentRow(container, value = 992, insertAfterRow = null) {
 }
 
 function ensureStarterRows() {
-  if (!widthRowsEl.children.length) createSegmentRow(widthRowsEl, 992);
-  if (!heightRowsEl.children.length) createSegmentRow(heightRowsEl, 992);
+  if (!widthRowsEl.children.length) createSegmentRow(widthRowsEl, { type: 'preset', optionId: 'std-992' });
+  if (!heightRowsEl.children.length) createSegmentRow(heightRowsEl, { type: 'preset', optionId: 'std-992' });
 }
 
 function readSegmentRows(container, axisName, inputUnit) {
-  const values = Array.from(container.querySelectorAll('.segment-row')).map((row) => {
+  const items = Array.from(container.querySelectorAll('.segment-row')).map((row) => {
     const select = row.querySelector('.segment-select');
     const customInput = row.querySelector('.segment-custom-input');
-    if (select.value === CUSTOM_OPTION_VALUE) return Number(customInput.value);
-    return Number(select.value);
+    if (select.value === CUSTOM_OPTION_VALUE) {
+      const value = Number(customInput.value);
+      return {
+        label: `Custom ${inputUnit === 'mm' ? `${value} mm` : `${value} in`}`,
+        segMm: sourceToMm(value, inputUnit),
+        hardMm: sourceToMm(value, inputUnit),
+        sourceValue: value,
+        isCustom: true,
+      };
+    }
+    const option = getOptionById(select.value);
+    if (!option) return null;
+    return {
+      label: option.label,
+      segMm: option.segMm,
+      hardMm: option.hardMm,
+      sourceValue: inputUnit === 'mm' ? option.segMm : mmToInches(option.segMm),
+      isCustom: false,
+    };
   });
-  if (!values.length) throw new Error(`${axisName} sections are required.`);
-  if (values.some((value) => !Number.isFinite(value) || value <= 0)) {
+  if (!items.length || items.some((item) => !item)) throw new Error(`${axisName} sections are required.`);
+  if (items.some((item) => !Number.isFinite(item.segMm) || item.segMm <= 0 || !Number.isFinite(item.hardMm) || item.hardMm <= 0)) {
     throw new Error(`${axisName} sections must be valid sizes.`);
   }
-  return {
-    source: inputUnit === 'mm' ? values : values.map(mmToInches),
-    mm: values,
-  };
+  return items;
 }
 
 function getInputs() {
@@ -168,20 +210,14 @@ function validate(input) {
 
 function buildPlan(input) {
   const warnings = validate(input);
-  const widthSegmentsBaseMm = input.widthSegments.mm;
-  const heightSegmentsBaseMm = input.heightSegments.mm;
-  const widthSegmentsSource = input.widthSegments.source;
-  const heightSegmentsSource = input.heightSegments.source;
-  const widthSegmentsMm = input.templateType === 'hard'
-    ? widthSegmentsBaseMm.map((value) => value === 62 ? 62 : value - HARD_PANEL_REDUCTION_MM)
-    : widthSegmentsBaseMm;
-  const heightSegmentsMm = input.templateType === 'hard'
-    ? heightSegmentsBaseMm.map((value) => value === 62 ? 62 : value - HARD_PANEL_REDUCTION_MM)
-    : heightSegmentsBaseMm;
-
-  if (widthSegmentsMm.some((value) => value <= 0) || heightSegmentsMm.some((value) => value <= 0)) {
-    throw new Error('Hard panel reduction made one or more sections zero or negative.');
-  }
+  const widthItems = input.widthSegments;
+  const heightItems = input.heightSegments;
+  const widthSegmentsBaseMm = widthItems.map((item) => item.segMm);
+  const heightSegmentsBaseMm = heightItems.map((item) => item.segMm);
+  const widthSegmentsSource = widthItems.map((item) => item.sourceValue);
+  const heightSegmentsSource = heightItems.map((item) => item.sourceValue);
+  const widthSegmentsMm = widthItems.map((item) => input.templateType === 'hard' ? item.hardMm : item.segMm);
+  const heightSegmentsMm = heightItems.map((item) => input.templateType === 'hard' ? item.hardMm : item.segMm);
 
   const finishedWidthMm = widthSegmentsMm.reduce((sum, value) => sum + value, 0);
   const finishedHeightMm = heightSegmentsMm.reduce((sum, value) => sum + value, 0);
@@ -197,6 +233,8 @@ function buildPlan(input) {
   return {
     ...input,
     warnings,
+    widthItems,
+    heightItems,
     widthSegmentsSource,
     heightSegmentsSource,
     widthSegmentsBaseMm,
@@ -219,8 +257,15 @@ function buildPlan(input) {
   };
 }
 
-function formatSourceList(values, unit) {
-  return values.map((value) => unit === 'mm' ? `${Number(value).toFixed(0)} mm` : `${Number(value).toFixed(2)} in`).join(' • ');
+function formatSourceList(items, templateType, inputUnit, outputUnit) {
+  return items.map((item) => {
+    if (templateType === 'hard' && item.segMm !== item.hardMm) {
+      return `${item.label}: ${formatOutput(mmToInches(item.hardMm), item.hardMm, outputUnit)}`;
+    }
+    return item.isCustom
+      ? `${item.label}`
+      : `${item.label}: ${inputUnit === 'mm' ? formatMm(item.segMm, 0) : formatInches(mmToInches(item.segMm), 2)}`;
+  }).join(' • ');
 }
 
 function renderWarnings(warnings) {
@@ -241,8 +286,8 @@ function renderSummary(plan) {
     ['Template type', typeLabel, typeNote],
     ['Input unit', plan.inputUnit.toUpperCase(), `Selected from beMatrix size list`],
     ['Output unit', plan.outputUnit.toUpperCase(), plan.outputUnit === 'in' ? 'Displayed/exported in inches rounded to 0.01' : 'Displayed/exported in millimeters'],
-    ['Width sections', `${plan.segmentColumns} sections`, plan.templateType === 'hard' ? `${plan.widthSegmentsBaseMm.map((value, i) => `${value}→${plan.widthSegmentsMm[i]} mm`).join(' • ')} • total ${formatOutput(plan.finishedWidthIn, plan.finishedWidthMm, plan.outputUnit)}` : `${formatSourceList(plan.widthSegmentsSource, plan.inputUnit)} • total ${formatOutput(plan.finishedWidthIn, plan.finishedWidthMm, plan.outputUnit)}`],
-    ['Height sections', `${plan.segmentRows} sections`, plan.templateType === 'hard' ? `${plan.heightSegmentsBaseMm.map((value, i) => `${value}→${plan.heightSegmentsMm[i]} mm`).join(' • ')} • total ${formatOutput(plan.finishedHeightIn, plan.finishedHeightMm, plan.outputUnit)}` : `${formatSourceList(plan.heightSegmentsSource, plan.inputUnit)} • total ${formatOutput(plan.finishedHeightIn, plan.finishedHeightMm, plan.outputUnit)}`],
+    ['Width sections', `${plan.segmentColumns} sections`, `${formatSourceList(plan.widthItems, plan.templateType, plan.inputUnit, plan.outputUnit)} • total ${formatOutput(plan.finishedWidthIn, plan.finishedWidthMm, plan.outputUnit)}`],
+    ['Height sections', `${plan.segmentRows} sections`, `${formatSourceList(plan.heightItems, plan.templateType, plan.inputUnit, plan.outputUnit)} • total ${formatOutput(plan.finishedHeightIn, plan.finishedHeightMm, plan.outputUnit)}`],
     ['Finished size', `${formatOutput(plan.finishedWidthIn, plan.finishedWidthMm, plan.outputUnit)} × ${formatOutput(plan.finishedHeightIn, plan.finishedHeightMm, plan.outputUnit)}`, `${formatMm(plan.finishedWidthMm)} × ${formatMm(plan.finishedHeightMm)}`],
     ['Bleed', plan.outputUnit === 'mm' ? formatMm(inchesToMm(plan.bleed), 1) : formatInches(plan.bleed, 2), 'Applied top, right, bottom, and left'],
     ['Export sizing', plan.templateType === 'hard' ? `Each piece labeled in ${plan.outputUnit}` : `${formatOutput(plan.artboardWidthIn, inchesToMm(plan.artboardWidthIn), plan.outputUnit)} × ${formatOutput(plan.artboardHeightIn, inchesToMm(plan.artboardHeightIn), plan.outputUnit)}`, plan.templateType === 'hard' ? 'Illustrator script creates adjacent artboards' : 'Single artboard includes bleed on all sides'],
