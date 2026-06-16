@@ -19,28 +19,29 @@ const MM_PER_INCH = 25.4;
 const HARD_PANEL_REDUCTION_MM = 7;
 const CUSTOM_OPTION_VALUE = '__custom__';
 const BEMATRIX_OPTIONS = [
-  { id: 'std-62', label: '62', segMm: 62, hardMm: 62 },
-  { id: 'std-248', label: '248', segMm: 248, hardMm: 248 - HARD_PANEL_REDUCTION_MM },
-  { id: 'std-434', label: '434', segMm: 434, hardMm: 434 - HARD_PANEL_REDUCTION_MM },
-  { id: 'std-496', label: '496', segMm: 496, hardMm: 496 - HARD_PANEL_REDUCTION_MM },
-  { id: 'std-558', label: '558', segMm: 558, hardMm: 558 - HARD_PANEL_REDUCTION_MM },
-  { id: 'std-620', label: '620', segMm: 620, hardMm: 620 - HARD_PANEL_REDUCTION_MM },
-  { id: 'std-992', label: '992', segMm: 992, hardMm: 992 - HARD_PANEL_REDUCTION_MM },
-  { id: 'std-1984', label: '1984', segMm: 1984, hardMm: 1984 - HARD_PANEL_REDUCTION_MM },
-  { id: 'std-2418', label: '2418', segMm: 2418, hardMm: 2418 - HARD_PANEL_REDUCTION_MM },
-  { id: 'std-2976', label: '2976', segMm: 2976, hardMm: 2976 - HARD_PANEL_REDUCTION_MM },
-  { id: 'curved-248-int', label: '248 - Curved Interior', segMm: 320, hardMm: 317 },
-  { id: 'curved-248-ext', label: '248 - Curved Exterior', segMm: 418, hardMm: 408 },
-  { id: 'curved-496-int', label: '496 - Curved Interior', segMm: 710, hardMm: 707 },
-  { id: 'curved-496-ext', label: '496 - Curved Exterior', segMm: 807, hardMm: 798 },
-  { id: 'curved-992-int-45', label: '992 - Curved Interior 45°', segMm: 730, hardMm: 725 },
-  { id: 'curved-992-ext-45', label: '992 - Curved Exterior 45°', segMm: 779, hardMm: 771 },
-  { id: 'curved-992-int-90', label: '992 - Curved Interior 90°', segMm: 1461, hardMm: 1458 },
-  { id: 'curved-992-ext-90', label: '992 - Curved Exterior 90°', segMm: 1558, hardMm: 1549 },
-  { id: 'curved-1488-int', label: '1488 - Curved Interior', segMm: 1120, hardMm: 1116 },
-  { id: 'curved-1488-ext', label: '1488 - Curved Exterior', segMm: 1168, hardMm: 1161 },
-  { id: 'curved-2976-int', label: '2976 - Curved Interior', segMm: 1144, hardMm: 1150 },
-  { id: 'curved-2976-ext', label: '2976 - Curved Exterior', segMm: 1168, hardMm: 1161 },
+  { id: 'std-62', group: 'Standard', label: '62', segMm: 62, hardMm: 62 },
+  { id: 'std-248', group: 'Standard', label: '248', segMm: 248, hardMm: 248 - HARD_PANEL_REDUCTION_MM },
+  { id: 'std-434', group: 'Standard', label: '434', segMm: 434, hardMm: 434 - HARD_PANEL_REDUCTION_MM },
+  { id: 'std-496', group: 'Standard', label: '496', segMm: 496, hardMm: 496 - HARD_PANEL_REDUCTION_MM },
+  { id: 'std-558', group: 'Standard', label: '558', segMm: 558, hardMm: 558 - HARD_PANEL_REDUCTION_MM },
+  { id: 'std-620', group: 'Standard', label: '620', segMm: 620, hardMm: 620 - HARD_PANEL_REDUCTION_MM },
+  { id: 'std-992', group: 'Standard', label: '992', segMm: 992, hardMm: 992 - HARD_PANEL_REDUCTION_MM },
+  { id: 'std-1488', group: 'Standard', label: '1488', segMm: 1488, hardMm: 1488 - HARD_PANEL_REDUCTION_MM },
+  { id: 'std-1984', group: 'Standard', label: '1984', segMm: 1984, hardMm: 1984 - HARD_PANEL_REDUCTION_MM },
+  { id: 'std-2418', group: 'Standard', label: '2418', segMm: 2418, hardMm: 2418 - HARD_PANEL_REDUCTION_MM },
+  { id: 'std-2976', group: 'Standard', label: '2976', segMm: 2976, hardMm: 2976 - HARD_PANEL_REDUCTION_MM },
+  { id: 'curved-248-int', group: 'Curved Interior', label: '248 - Curved Interior', segMm: 320, hardMm: 317 },
+  { id: 'curved-496-int', group: 'Curved Interior', label: '496 - Curved Interior', segMm: 710, hardMm: 707 },
+  { id: 'curved-992-int-45', group: 'Curved Interior', label: '992 - Curved Interior 45°', segMm: 730, hardMm: 725 },
+  { id: 'curved-992-int-90', group: 'Curved Interior', label: '992 - Curved Interior 90°', segMm: 1461, hardMm: 1458 },
+  { id: 'curved-1488-int', group: 'Curved Interior', label: '1488 - Curved Interior', segMm: 1120, hardMm: 1116 },
+  { id: 'curved-2976-int', group: 'Curved Interior', label: '2976 - Curved Interior', segMm: 1144, hardMm: 1150 },
+  { id: 'curved-248-ext', group: 'Curved Exterior', label: '248 - Curved Exterior', segMm: 418, hardMm: 408 },
+  { id: 'curved-496-ext', group: 'Curved Exterior', label: '496 - Curved Exterior', segMm: 807, hardMm: 798 },
+  { id: 'curved-992-ext-45', group: 'Curved Exterior', label: '992 - Curved Exterior 45°', segMm: 779, hardMm: 771 },
+  { id: 'curved-992-ext-90', group: 'Curved Exterior', label: '992 - Curved Exterior 90°', segMm: 1558, hardMm: 1549 },
+  { id: 'curved-1488-ext', group: 'Curved Exterior', label: '1488 - Curved Exterior', segMm: 1168, hardMm: 1161 },
+  { id: 'curved-2976-ext', group: 'Curved Exterior', label: '2976 - Curved Exterior', segMm: 1168, hardMm: 1161 },
 ];
 
 let currentSvgMarkup = '';
@@ -109,12 +110,19 @@ function createSegmentRow(container, initial = { type: 'preset', optionId: 'std-
   const select = row.querySelector('.segment-select');
   const customInput = row.querySelector('.segment-custom-input');
 
+  const groups = new Map();
   BEMATRIX_OPTIONS.forEach((option) => {
+    if (!groups.has(option.group)) {
+      const optgroup = document.createElement('optgroup');
+      optgroup.label = option.group;
+      groups.set(option.group, optgroup);
+      select.appendChild(optgroup);
+    }
     const item = document.createElement('option');
     item.value = option.id;
     item.textContent = `${option.label} (SEG ${option.segMm} / Hard ${option.hardMm})`;
     if (initial.type === 'preset' && option.id === initial.optionId) item.selected = true;
-    select.appendChild(item);
+    groups.get(option.group).appendChild(item);
   });
 
   const customOption = document.createElement('option');
