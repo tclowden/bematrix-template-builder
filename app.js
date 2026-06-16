@@ -456,6 +456,7 @@ function buildIllustratorScript(plan) {
 
   const payload = {
     title,
+    suggestedFileName: `${plan.jobName ? slugify(plan.jobName) : `bematrix-${plan.templateType}-template`}.ai`,
     bleedIn: plan.bleed,
     gapIn,
     pieces,
@@ -520,7 +521,21 @@ function buildIllustratorScript(plan) {
   }
 
   app.activeDocument = doc;
-  alert('Illustrator template created with ' + payload.pieces.length + ' artboard(s).');
+  var saveTarget = File.saveDialog('Save Illustrator template as', '*.ai');
+  if (saveTarget) {
+    if (!/\.ai$/i.test(saveTarget.name)) {
+      saveTarget = new File(saveTarget.fsName + '.ai');
+    }
+    var saveOptions = new IllustratorSaveOptions();
+    saveOptions.pdfCompatible = true;
+    saveOptions.embedICCProfile = true;
+    saveOptions.compressed = true;
+    saveOptions.compatibility = Compatibility.ILLUSTRATOR17;
+    doc.saveAs(saveTarget, saveOptions);
+    alert('Illustrator template created and saved as ' + saveTarget.name + '.');
+  } else {
+    alert('Illustrator template created with ' + payload.pieces.length + ' artboard(s). Save cancelled.');
+  }
 })();
 `;
 }
