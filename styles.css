@@ -91,10 +91,13 @@ h1 { margin-bottom: 10px; font-size: clamp(2rem, 3vw, 3.2rem); }
 }
 .segment-row {
   display: grid;
-  grid-template-columns: minmax(0,1fr) auto;
+  grid-template-columns: minmax(0,1fr) minmax(140px, 180px) auto;
   gap: 10px;
   padding: 10px;
   align-items: center;
+}
+.segment-custom-input[hidden] {
+  display: none;
 }
 .action-row { display: flex; gap: 12px; flex-wrap: wrap; }
 button {

@@ -17,7 +17,8 @@ const INCH_TO_PX = 96;
 const POINTS_PER_INCH = 72;
 const MM_PER_INCH = 25.4;
 const HARD_PANEL_REDUCTION_MM = 7;
-const BEMATRIX_SIZES_MM = [62, 248, 434, 496, 558, 620, 992, 1984, 2419, 2976];
+const BEMATRIX_SIZES_MM = [62, 248, 434, 496, 558, 620, 992, 1984, 2418, 2976];
+const CUSTOM_OPTION_VALUE = '__custom__';
 
 let currentSvgMarkup = '';
 let currentIllustratorScript = '';
@@ -70,9 +71,18 @@ function cumulative(values) {
   return points;
 }
 
+function setCustomVisibility(select, customInput) {
+  const isCustom = select.value === CUSTOM_OPTION_VALUE;
+  customInput.hidden = !isCustom;
+  customInput.required = isCustom;
+}
+
 function createSegmentRow(container, value = 992) {
   const row = segmentRowTemplate.content.firstElementChild.cloneNode(true);
   const select = row.querySelector('.segment-select');
+  const customInput = row.querySelector('.segment-custom-input');
+  const hasPreset = BEMATRIX_SIZES_MM.includes(value);
+
   BEMATRIX_SIZES_MM.forEach((size) => {
     const option = document.createElement('option');
     option.value = String(size);
@@ -80,9 +90,24 @@ function createSegmentRow(container, value = 992) {
     if (size === value) option.selected = true;
     select.appendChild(option);
   });
+
+  const customOption = document.createElement('option');
+  customOption.value = CUSTOM_OPTION_VALUE;
+  customOption.textContent = 'Custom…';
+  if (!hasPreset) {
+    customOption.selected = true;
+    customInput.value = String(value);
+  }
+  select.appendChild(customOption);
+
+  select.addEventListener('change', () => setCustomVisibility(select, customInput));
+  setCustomVisibility(select, customInput);
+
   row.querySelector('.remove-button').addEventListener('click', () => {
     if (container.children.length === 1) {
       select.value = '992';
+      customInput.value = '';
+      setCustomVisibility(select, customInput);
       return;
     }
     row.remove();
@@ -96,7 +121,12 @@ function ensureStarterRows() {
 }
 
 function readSegmentRows(container, axisName, inputUnit) {
-  const values = Array.from(container.querySelectorAll('.segment-select')).map((select) => Number(select.value));
+  const values = Array.from(container.querySelectorAll('.segment-row')).map((row) => {
+    const select = row.querySelector('.segment-select');
+    const customInput = row.querySelector('.segment-custom-input');
+    if (select.value === CUSTOM_OPTION_VALUE) return Number(customInput.value);
+    return Number(select.value);
+  });
   if (!values.length) throw new Error(`${axisName} sections are required.`);
   if (values.some((value) => !Number.isFinite(value) || value <= 0)) {
     throw new Error(`${axisName} sections must be valid sizes.`);
