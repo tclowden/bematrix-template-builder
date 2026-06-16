@@ -120,7 +120,7 @@ function createSegmentRow(container, initial = { type: 'preset', optionId: 'std-
     }
     const item = document.createElement('option');
     item.value = option.id;
-    item.textContent = `${option.label} (SEG ${option.segMm} / Hard ${option.hardMm})`;
+    item.textContent = option.label;
     if (initial.type === 'preset' && option.id === initial.optionId) item.selected = true;
     groups.get(option.group).appendChild(item);
   });
