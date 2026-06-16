@@ -77,7 +77,7 @@ function setCustomVisibility(select, customInput) {
   customInput.required = isCustom;
 }
 
-function createSegmentRow(container, value = 992) {
+function createSegmentRow(container, value = 992, insertAfterRow = null) {
   const row = segmentRowTemplate.content.firstElementChild.cloneNode(true);
   const select = row.querySelector('.segment-select');
   const customInput = row.querySelector('.segment-custom-input');
@@ -103,6 +103,11 @@ function createSegmentRow(container, value = 992) {
   select.addEventListener('change', () => setCustomVisibility(select, customInput));
   setCustomVisibility(select, customInput);
 
+  row.querySelector('.duplicate-button').addEventListener('click', () => {
+    const duplicateValue = select.value === CUSTOM_OPTION_VALUE ? Number(customInput.value) : Number(select.value);
+    createSegmentRow(container, duplicateValue, row);
+  });
+
   row.querySelector('.remove-button').addEventListener('click', () => {
     if (container.children.length === 1) {
       select.value = '992';
@@ -112,7 +117,12 @@ function createSegmentRow(container, value = 992) {
     }
     row.remove();
   });
-  container.appendChild(row);
+
+  if (insertAfterRow && insertAfterRow.parentNode === container) {
+    insertAfterRow.insertAdjacentElement('afterend', row);
+  } else {
+    container.appendChild(row);
+  }
 }
 
 function ensureStarterRows() {
