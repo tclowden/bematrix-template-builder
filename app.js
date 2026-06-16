@@ -343,6 +343,7 @@ function buildSegSvg(plan) {
   const finishedHeightPx = inchesToPx(plan.finishedHeightIn);
   const totalWidthLabel = `Overall width: ${formatOutput(plan.finishedWidthIn, plan.finishedWidthMm, plan.outputUnit)}`;
   const totalHeightLabel = `Overall height: ${formatOutput(plan.finishedHeightIn, plan.finishedHeightMm, plan.outputUnit)}`;
+  const instructionLine = 'Keep all graphics inside the black line. Extend bleed to the red dotted line.';
   const title = plan.jobName ? `${escapeXml(plan.jobName)} • ` : '';
 
   return `<?xml version="1.0" encoding="UTF-8"?>
@@ -354,8 +355,9 @@ function buildSegSvg(plan) {
   <text x="${trimXPx + (finishedWidthPx / 2)}" y="${trimYPx - 14}" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#475569">${totalWidthLabel}</text>
   <text x="${trimXPx - 10}" y="${trimYPx + (finishedHeightPx / 2)}" text-anchor="end" dominant-baseline="middle" font-family="Arial, sans-serif" font-size="16" fill="#475569">${totalHeightLabel}</text>
   <text x="36" y="44" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#020c14">${title}beMatrix SEG Template</text>
-  <text x="36" y="76" font-family="Arial, sans-serif" font-size="18" fill="#63666a">Finished size: ${formatOutput(plan.finishedWidthIn, plan.finishedWidthMm, plan.outputUnit)} × ${formatOutput(plan.finishedHeightIn, plan.finishedHeightMm, plan.outputUnit)} • Artboard: ${formatOutput(plan.artboardWidthIn, inchesToMm(plan.artboardWidthIn), plan.outputUnit)} × ${formatOutput(plan.artboardHeightIn, inchesToMm(plan.artboardHeightIn), plan.outputUnit)} • Bleed: ${plan.outputUnit === 'mm' ? formatMm(inchesToMm(plan.bleed), 1) : formatInches(plan.bleed, 2)}</text>
-  <text x="36" y="104" font-family="Arial, sans-serif" font-size="16" fill="#63666a">Input ${plan.inputUnit.toUpperCase()} • output ${plan.outputUnit.toUpperCase()} • CMYK target</text>
+  <text x="36" y="66" font-family="Arial, sans-serif" font-size="14" fill="#63666a">${instructionLine}</text>
+  <text x="36" y="88" font-family="Arial, sans-serif" font-size="18" fill="#63666a">Finished size: ${formatOutput(plan.finishedWidthIn, plan.finishedWidthMm, plan.outputUnit)} × ${formatOutput(plan.finishedHeightIn, plan.finishedHeightMm, plan.outputUnit)} • Artboard: ${formatOutput(plan.artboardWidthIn, inchesToMm(plan.artboardWidthIn), plan.outputUnit)} × ${formatOutput(plan.artboardHeightIn, inchesToMm(plan.artboardHeightIn), plan.outputUnit)} • Bleed: ${plan.outputUnit === 'mm' ? formatMm(inchesToMm(plan.bleed), 1) : formatInches(plan.bleed, 2)}</text>
+  <text x="36" y="112" font-family="Arial, sans-serif" font-size="16" fill="#63666a">Input ${plan.inputUnit.toUpperCase()} • output ${plan.outputUnit.toUpperCase()} • CMYK target</text>
 </svg>`;
 }
 
@@ -395,12 +397,14 @@ function buildHardSvg(plan) {
   });
 
   const title = plan.jobName ? `${escapeXml(plan.jobName)} • ` : '';
+  const instructionLine = 'Keep all graphics inside the black line. Extend bleed to the red dotted line.';
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="${(totalWidthPx / INCH_TO_PX).toFixed(3)}in" height="${(totalHeightPx / INCH_TO_PX).toFixed(3)}in" viewBox="0 0 ${totalWidthPx} ${totalHeightPx}">
   <title>${title}beMatrix Hard Panel Template</title>
   <rect x="0" y="0" width="${totalWidthPx}" height="${totalHeightPx}" fill="#f8fafc" />
   <text x="${marginPx}" y="${marginPx + 12}" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#020c14">${title}beMatrix Hard Panel Pieces</text>
-  <text x="${marginPx}" y="${marginPx + 38}" font-family="Arial, sans-serif" font-size="16" fill="#63666a">Input ${plan.inputUnit.toUpperCase()} • output ${plan.outputUnit.toUpperCase()} • Bleed ${plan.outputUnit === 'mm' ? formatMm(inchesToMm(plan.bleed), 1) : formatInches(plan.bleed, 2)} • ${plan.totalPieces} total pieces</text>
+  <text x="${marginPx}" y="${marginPx + 32}" font-family="Arial, sans-serif" font-size="13" fill="#63666a">${instructionLine}</text>
+  <text x="${marginPx}" y="${marginPx + 52}" font-family="Arial, sans-serif" font-size="16" fill="#63666a">Input ${plan.inputUnit.toUpperCase()} • output ${plan.outputUnit.toUpperCase()} • Bleed ${plan.outputUnit === 'mm' ? formatMm(inchesToMm(plan.bleed), 1) : formatInches(plan.bleed, 2)} • ${plan.totalPieces} total pieces</text>
   ${pieces.join('')}
 </svg>`;
 }
