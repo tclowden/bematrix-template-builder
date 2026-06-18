@@ -26,6 +26,7 @@ const BEMATRIX_OPTIONS = [
   { id: 'std-558', group: 'Standard', label: '558', segMm: 558, hardMm: 558 - HARD_PANEL_REDUCTION_MM },
   { id: 'std-620', group: 'Standard', label: '620', segMm: 620, hardMm: 620 - HARD_PANEL_REDUCTION_MM },
   { id: 'std-992', group: 'Standard', label: '992', segMm: 992, hardMm: 992 - HARD_PANEL_REDUCTION_MM },
+  { id: 'std-1178', group: 'Standard', label: '1178', segMm: 1178, hardMm: 1178 - HARD_PANEL_REDUCTION_MM },
   { id: 'std-1488', group: 'Standard', label: '1488', segMm: 1488, hardMm: 1488 - HARD_PANEL_REDUCTION_MM },
   { id: 'std-1984', group: 'Standard', label: '1984', segMm: 1984, hardMm: 1984 - HARD_PANEL_REDUCTION_MM },
   { id: 'std-2418', group: 'Standard', label: '2418', segMm: 2418, hardMm: 2418 - HARD_PANEL_REDUCTION_MM },
