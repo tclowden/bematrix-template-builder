@@ -17,6 +17,8 @@ const INCH_TO_PX = 96;
 const POINTS_PER_INCH = 72;
 const MM_PER_INCH = 25.4;
 const HARD_PANEL_REDUCTION_MM = 7;
+const MIN_WORKING_AREA_WIDTH_IN = 500;
+const MIN_WORKING_AREA_HEIGHT_IN = 300;
 const CUSTOM_OPTION_VALUE = '__custom__';
 const BEMATRIX_OPTIONS = [
   { id: 'std-62', group: 'Standard', label: '62', segMm: 62, hardMm: 62 },
@@ -455,8 +457,10 @@ function buildIllustratorScript(plan) {
     ? `(piece.trimWidthMm + payload.bleedIn * 2 * 25.4).toFixed(1).replace(/\\.0$/, '') + ' mm × ' + (piece.trimHeightMm + payload.bleedIn * 2 * 25.4).toFixed(1).replace(/\\.0$/, '') + ' mm'`
     : `piece.artboardWidthIn.toFixed(2) + ' in × ' + piece.artboardHeightIn.toFixed(2) + ' in'`;
 
-  const canvasWidthIn = pieces.reduce((max, piece) => Math.max(max, piece.leftIn + piece.artboardWidthIn), 0);
-  const canvasHeightIn = pieces.reduce((max, piece) => Math.max(max, piece.topIn), 0);
+  const requiredCanvasWidthIn = pieces.reduce((max, piece) => Math.max(max, piece.leftIn + piece.artboardWidthIn), 0);
+  const requiredCanvasHeightIn = pieces.reduce((max, piece) => Math.max(max, piece.topIn), 0);
+  const canvasWidthIn = Math.max(MIN_WORKING_AREA_WIDTH_IN, requiredCanvasWidthIn);
+  const canvasHeightIn = Math.max(MIN_WORKING_AREA_HEIGHT_IN, requiredCanvasHeightIn);
 
   const payload = {
     title,
