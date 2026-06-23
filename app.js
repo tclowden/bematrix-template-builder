@@ -506,7 +506,10 @@ function buildIllustratorScript(plan) {
   layer.name = payload.title;
   var artboards = doc.artboards;
   var bleedPt = toPt(payload.bleedIn);
-  var maxTopIn = payload.pieces.reduce(function (max, piece) { return Math.max(max, piece.topIn || 0); }, 0);
+  var maxTopIn = 0;
+  for (var p = 0; p < payload.pieces.length; p++) {
+    maxTopIn = Math.max(maxTopIn, payload.pieces[p].topIn || 0);
+  }
   var strokeTrim = makeCmyk(75, 68, 67, 90);
   var strokeBleed = makeCmyk(0, 82, 93, 0);
   var textColor = makeCmyk(73, 55, 48, 18);
