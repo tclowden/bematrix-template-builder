@@ -523,7 +523,9 @@ function buildIllustratorScript(plan) {
     var left = toPt(piece.leftIn || 0);
     var topOrigin = docHeightPt - toPt(maxTopIn - (piece.topIn || 0));
     var rect = [left, topOrigin, left + artW, topOrigin - artH];
-    if (i > 0) {
+    if (i === 0 && payload.templateType === 'hard') {
+      artboards[0].artboardRect = rect;
+    } else if (i > 0) {
       artboards.add(rect);
     }
     artboards[i].name = piece.label;
