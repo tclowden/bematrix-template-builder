@@ -494,9 +494,10 @@ function buildIllustratorScript(plan) {
     return Math.max(minPt, Math.min(desiredPt, estimated));
   }
   var first = payload.pieces[0];
-  var docWidthPt = toPt(payload.canvasWidthIn);
+  var firstArtboardWidthPt = toPt(first.artboardWidthIn);
+  var firstArtboardHeightPt = toPt(first.artboardHeightIn);
   var docHeightPt = toPt(payload.canvasHeightIn);
-  var doc = app.documents.add(DocumentColorSpace.CMYK, docWidthPt, docHeightPt);
+  var doc = app.documents.add(DocumentColorSpace.CMYK, firstArtboardWidthPt, firstArtboardHeightPt);
   try { app.preferences.setIntegerPreference('rulerType', 0); } catch (e) {}
   try { app.preferences.setIntegerPreference('strokeUnits', 0); } catch (e) {}
   try { app.preferences.setIntegerPreference('text/units', 0); } catch (e) {}
@@ -517,9 +518,7 @@ function buildIllustratorScript(plan) {
     var left = toPt(piece.leftIn || 0);
     var topOrigin = docHeightPt - toPt(maxTopIn - (piece.topIn || 0));
     var rect = [left, topOrigin, left + artW, topOrigin - artH];
-    if (i === 0) {
-      artboards[0].artboardRect = rect;
-    } else {
+    if (i > 0) {
       artboards.add(rect);
     }
     artboards[i].name = piece.label;
