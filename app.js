@@ -465,6 +465,7 @@ function buildIllustratorScript(plan) {
 
   const payload = {
     title,
+    templateType: plan.templateType,
     instructionLine: 'Keep all graphics inside the black line. Extend bleed to the red dotted line.',
     suggestedFileName: `${plan.jobName ? slugify(plan.jobName) : `bematrix-${plan.templateType}-template`}.ai`,
     bleedIn: plan.bleed,
@@ -496,7 +497,9 @@ function buildIllustratorScript(plan) {
   var first = payload.pieces[0];
   var firstArtboardWidthPt = toPt(first.artboardWidthIn);
   var firstArtboardHeightPt = toPt(first.artboardHeightIn);
-  var doc = app.documents.add(DocumentColorSpace.CMYK, firstArtboardWidthPt, firstArtboardHeightPt);
+  var docWidthPt = payload.templateType === 'hard' ? toPt(payload.canvasWidthIn) : firstArtboardWidthPt;
+  var docHeightPt = payload.templateType === 'hard' ? toPt(payload.canvasHeightIn) : firstArtboardHeightPt;
+  var doc = app.documents.add(DocumentColorSpace.CMYK, docWidthPt, docHeightPt);
   try { app.preferences.setIntegerPreference('rulerType', 0); } catch (e) {}
   try { app.preferences.setIntegerPreference('strokeUnits', 0); } catch (e) {}
   try { app.preferences.setIntegerPreference('text/units', 0); } catch (e) {}
@@ -518,7 +521,7 @@ function buildIllustratorScript(plan) {
     var artW = toPt(piece.artboardWidthIn);
     var artH = toPt(piece.artboardHeightIn);
     var left = toPt(piece.leftIn || 0);
-    var topOrigin = firstArtboardHeightPt - toPt(maxTopIn - (piece.topIn || 0));
+    var topOrigin = docHeightPt - toPt(maxTopIn - (piece.topIn || 0));
     var rect = [left, topOrigin, left + artW, topOrigin - artH];
     if (i > 0) {
       artboards.add(rect);
