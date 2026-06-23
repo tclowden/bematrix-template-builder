@@ -17,8 +17,8 @@ const INCH_TO_PX = 96;
 const POINTS_PER_INCH = 72;
 const MM_PER_INCH = 25.4;
 const HARD_PANEL_REDUCTION_MM = 7;
-const MIN_WORKING_AREA_WIDTH_IN = 500;
-const MIN_WORKING_AREA_HEIGHT_IN = 300;
+const MIN_WORKING_AREA_WIDTH_IN = 24;
+const MIN_WORKING_AREA_HEIGHT_IN = 24;
 const CUSTOM_OPTION_VALUE = '__custom__';
 const BEMATRIX_OPTIONS = [
   { id: 'std-62', group: 'Standard', label: '62', segMm: 62, hardMm: 62 },
@@ -459,8 +459,9 @@ function buildIllustratorScript(plan) {
 
   const requiredCanvasWidthIn = pieces.reduce((max, piece) => Math.max(max, piece.leftIn + piece.artboardWidthIn), 0);
   const requiredCanvasHeightIn = pieces.reduce((max, piece) => Math.max(max, piece.topIn), 0);
-  const canvasWidthIn = Math.max(MIN_WORKING_AREA_WIDTH_IN, requiredCanvasWidthIn);
-  const canvasHeightIn = Math.max(MIN_WORKING_AREA_HEIGHT_IN, requiredCanvasHeightIn);
+  const canvasPaddingIn = 2;
+  const canvasWidthIn = Math.max(MIN_WORKING_AREA_WIDTH_IN, requiredCanvasWidthIn + canvasPaddingIn);
+  const canvasHeightIn = Math.max(MIN_WORKING_AREA_HEIGHT_IN, requiredCanvasHeightIn + canvasPaddingIn);
 
   const payload = {
     title,
@@ -502,6 +503,7 @@ function buildIllustratorScript(plan) {
   layer.name = payload.title;
   var artboards = doc.artboards;
   var bleedPt = toPt(payload.bleedIn);
+  var maxTopIn = payload.pieces.reduce(function (max, piece) { return Math.max(max, piece.topIn || 0); }, 0);
   var strokeTrim = makeCmyk(75, 68, 67, 90);
   var strokeBleed = makeCmyk(0, 82, 93, 0);
   var textColor = makeCmyk(73, 55, 48, 18);
@@ -511,7 +513,7 @@ function buildIllustratorScript(plan) {
     var artW = toPt(piece.artboardWidthIn);
     var artH = toPt(piece.artboardHeightIn);
     var left = toPt(piece.leftIn || 0);
-    var topOrigin = toPt(piece.topIn || 0);
+    var topOrigin = -toPt(maxTopIn - (piece.topIn || 0));
     var rect = [left, topOrigin, left + artW, topOrigin - artH];
     if (i === 0) {
       artboards[0].artboardRect = rect;
